@@ -1,8 +1,3 @@
-library(numDeriv)
-library(fda)
-library(MASS)
-library(truncnorm)
-
 m = ncol(y)
 M = m - 2
 n = nrow(y)  # number of patients

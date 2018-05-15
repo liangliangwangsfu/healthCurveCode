@@ -110,3 +110,13 @@ findCat <- function(zvalue,thresholds)
     i <- i + 1
   i-1
 }
+
+setKnots = function(yi, deadDay)
+{
+  lastDay = deadDay
+  if (deadDay == -1)
+    lastDay = m
+  jumpInd=(yi[2:lastDay] -  yi[1:lastDay - 1]) != 0
+  jumpPoints = sort(unique(c(1, (1:(lastDay-1))[jumpInd], lastDay)))
+  return(jumpPoints)
+}

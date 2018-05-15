@@ -100,7 +100,8 @@ oneRunMCMC <-
   function(X,y, folder, nIterInOneBatch, nBatch, a_lambda, b_lambda, sd_gamma_hat) {
     if (!file.exists(folder)) {
       dir.create(folder)
-    }
+    }   
+    n <- nrow(X)
     filename_lambda = paste(folder,"lambda",sep = "")
     filename_beta = paste(folder,"beta",sep = "")
     filename_bvec = paste(folder,"bvec",sep = "")
