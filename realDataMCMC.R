@@ -1,4 +1,6 @@
-folder=paste("./Results/realDataPatient_LHIN", uniqueLevel,"_", nObsThisLevel,"_", "/",sep="")
+
+
+folder=paste("./Results/realDataPatient_LHIN", uniqueLevel,"_", nObsThisLevel,"_MIN-", abs(MIN),"_nBatch",nBatch, "/",sep="")
 indx = X[,"Patient_LHIN"]==uniqueLevel
 nsub=sum(indx)
 X=X[indx,1:2]
@@ -24,6 +26,8 @@ sd_gamma_hat = c(0.01, 0.01, 0.01, 0.01)
 #sd_gamma_hat = c(0.1, 0.1, 0.1, 0.1)
 #MAX=10
 #MIN=-10   #death
+ptm=proc.time()
 runmcmcre<-oneRunMCMC(X,y, folder, nIterInOneBatch, nBatch,a_lambda, b_lambda, sd_gamma_hat)
+mcmcTime=proc.time()-ptm
 source("makeGraph.R")
 save.image(file=paste(folder,"/result.RData",sep=""))

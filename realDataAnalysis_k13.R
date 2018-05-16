@@ -16,13 +16,12 @@ colnames(nObsEachLevel) <- uniqueLevel
 #  nObsEachLevel[i] <- sum(X[,"Patient_LHIN"]==uniqueLevel[i])
 k=13
 nIterInOneBatch=3
-nBatch=100
+nBatch=3000
 MAX=10
 MIN=-10
 load("strokeData.RData")
 #realDataMCMC(uniqueLevel[k], nObsEachLevel[k], nIterInOneBatch, nBatch, MAX, MIN)  
 uniqueLevel=uniqueLevel[k]
 nObsThisLevel=nObsEachLevel[k]
-ptm=proc.time()
 source("realDataMCMC.R")  
-proc.time()-ptm
+
