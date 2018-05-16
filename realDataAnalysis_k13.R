@@ -23,4 +23,6 @@ load("strokeData.RData")
 #realDataMCMC(uniqueLevel[k], nObsEachLevel[k], nIterInOneBatch, nBatch, MAX, MIN)  
 uniqueLevel=uniqueLevel[k]
 nObsThisLevel=nObsEachLevel[k]
+ptm=proc.time()
 source("realDataMCMC.R")  
+proc.time()-ptm

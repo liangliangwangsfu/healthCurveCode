@@ -1,4 +1,4 @@
-source("displayDataFuns.r")
+source("displayDataFuns.R")
 library("fda")
 
 #folder="./onesample-May13-MCMC/"  
