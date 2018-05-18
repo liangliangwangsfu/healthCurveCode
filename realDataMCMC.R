@@ -1,10 +1,12 @@
-
-
-folder=paste("./Results/realDataPatient_LHIN", uniqueLevel,"_", nObsThisLevel,"_MIN-", abs(MIN),"_nBatch",nBatch, "/",sep="")
+folder=paste("./Results/realDataPatient_LHIN", uniqueLevel,"_", nObsThisLevel,"_MIN-", abs(MIN),"_MAX",MAX,"_nBatch",nBatch, "/",sep="")
 indx = X[,"Patient_LHIN"]==uniqueLevel
 nsub=sum(indx)
 X=X[indx,1:2]
 y=y[indx,]
+
+X=X[1:50,]
+y=y[1:50,]
+
 data<-removeDeathOnFirstDay(X,y)
 X=data$X
 y=data$y

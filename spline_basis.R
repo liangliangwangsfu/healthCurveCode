@@ -27,14 +27,13 @@ RmatList = list()
 basismatAllDaysList=list()
 lastObs=lastDays
 #K = m+2
-#K=12
 #commonKnots=seq(1,m,length.out = K-1)  
-#commonKnots=seq(1,m,by=10)
+commonKnots=seq(1,m,by=15)
 hatList = list()
 for (i in 1:n) {
   tobsList[[i]] = 1:lastObs[i]
-  knotsList[[i]] = setKnots(y[i,], lastObs[i]) #c(commonKnots[commonKnots<lastObs[i]],lastObs[i])
-  #knotsList[[i]] = c(commonKnots[commonKnots<lastObs[i]],lastObs[i])
+  #knotsList[[i]] = setKnots(y[i,], lastObs[i]) #c(commonKnots[commonKnots<lastObs[i]],lastObs[i])
+  knotsList[[i]] = c(commonKnots[commonKnots<lastObs[i]],lastObs[i])
   nbasisVec[i]   =   length(knotsList[[i]])  + norder - 2
   bsbasisList[[i]]  = create.bspline.basis(range(knotsList[[i]]),nbasisVec[i],norder,knotsList[[i]])
   # basis values at sampling points
