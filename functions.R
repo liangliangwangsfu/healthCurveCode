@@ -84,9 +84,8 @@ log_pi_gamma = function(y, k,  hiMat, current_gamma, sigma2_epsilon) {
 
 kappa <- function(gamma)
 {
-  fixedThred2=1
   result<-rep(-1,length(gamma)+1)
-  result[1]<-MIN
+  result[1]<-fixedThred1
   for(i in 2:(length(gamma)+1))
   {
     result[i]<-(result[i-1]+fixedThred2*exp(gamma[i-1]))/(1+exp(gamma[i-1]))

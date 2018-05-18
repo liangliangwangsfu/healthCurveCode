@@ -93,9 +93,9 @@ updateNiter <-
 
 oneRunMCMC <-
   function(X,y, folder, nIterInOneBatch, nBatch, a_lambda, b_lambda, sd_gamma_hat) {
-    if (!file.exists(folder)) {
-      dir.create(folder)
-    }   
+    # if (!file.exists(folder)) {
+    #   dir.create(folder)
+    # }   
     n <- nrow(X)
     filename_lambda = paste(folder,"lambda",sep = "")
     filename_beta = paste(folder,"beta",sep = "")
@@ -116,7 +116,8 @@ oneRunMCMC <-
     lambda <- 35
     gammaVec <- rnorm(4)
     zMat <-  matrix(rnorm(n*m),n,m) # initZ(gammaVec)
-    beta <- c(4, 0.2,-0.08)+rep(0, ncol(X))
+    #beta <- c(4, 0.2,-0.08)+rep(0, ncol(X))
+    beta <- rnorm(ncol(X)) 
     sigma2_epsilon=0.5
     sigma2_b <- 1
     bvec <-  rnorm(n,0, sqrt(sigma2_b))
@@ -126,10 +127,10 @@ oneRunMCMC <-
           bvec, sigma2_b, cList, lambda, lambda_mu, gammaVec, zMat,beta, sigma2_epsilon, a_lambda, b_lambda, sd_gamma_hat
         )
     for (j in 1:nBatch) {
-      cat("batach: ", j, "\n")
+      cat("\n batch: ", j, "\n")
         
         for (i in 1:nIterInOneBatch) {
-          cat("iter ", i,  "\n")
+          cat(i,  " ")
           gsRe <-
             oneStepGs(
               gsRe$bvec, gsRe$sigma2_b, gsRe$cList, gsRe$lambda, gsRe$lambda_mu, gsRe$gammaVec, gsRe$zMat, gsRe$beta, gsRe$sigma2_epsilon, a_lambda, b_lambda, sd_gamma_hat

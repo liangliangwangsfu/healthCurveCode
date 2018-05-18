@@ -69,12 +69,11 @@ for(j in 1:(nend-burnin))
 }
 
 #########################################################################################
-#newMax = quantile(mean.mat,0.99,na.rm=T)  #7.508693 
+newMax = quantile(mean.mat,0.99,na.rm=T)  
 #newMax = quantile(rowMeans(mean.mat),0.99,na.rm=T)
-newMax = max(rowMeans(mean.mat), na.rm=T)
+#newMax = max(rowMeans(mean.mat), na.rm=T)
 himean  <- (colMeans(mean.mat.2,na.rm = T)-MIN)/(newMax-MIN)
 mean(himean)
-
 hilower <- (apply(mean.mat.2,2,function(x)  quantile(x, 0.025, na.rm = T))-MIN)/(newMax-MIN)
 hiupper <- (apply(mean.mat.2,2,function(x)  quantile(x, 0.975, na.rm = T))-MIN)/(newMax-MIN)
 pdf(paste(folder, "meanCurve.pdf", sep=""),width=6,height=6)
@@ -110,11 +109,11 @@ dev.off()
 normHMat[normHMat>1]=1
 normHMat[normHMat<0]=0
 pdf(paste(folder, "selectedCurves.pdf",sep=""), width=6,height=6)
-nSel <- 4
+nSel <- 10
 #oneSample <- sample(1:nrow(mean.mat),nSel)
-oneSample <- c(1, 2, 3, 4)
-colvec <- c(1,4,2,6)
-ltyvec <- c(2,3,1,4)
+oneSample <- 20+(1:nSel)
+colvec <- 1:nSel#c(1,4,2,6)
+ltyvec <- 1:nSel#c(2,3,1,4)
 par(mar = c(2, 2, 0.5, 0.5), mfrow = c(2,1))
 nLevels = 7
 title <- NULL

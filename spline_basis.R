@@ -26,13 +26,22 @@ D2basismatList = list()
 RmatList = list()
 basismatAllDaysList=list()
 lastObs=lastDays
-#K = m+2
-#commonKnots=seq(1,m,length.out = K-1)  
-commonKnots=seq(1,m,by=15)
+if(knotsOption==1)
+{
+  K = m+2
+  commonKnots=seq(1,m,length.out = K-2)  
+}  else
+  if(knotsOption==2)
+  {
+    commonKnots=seq(1,m,by=distBetween2knots)
+  } 
+  
 hatList = list()
 for (i in 1:n) {
   tobsList[[i]] = 1:lastObs[i]
-  #knotsList[[i]] = setKnots(y[i,], lastObs[i]) #c(commonKnots[commonKnots<lastObs[i]],lastObs[i])
+  if(knotsOption==3)
+  knotsList[[i]] = setKnots(y[i,], lastObs[i]) #c(commonKnots[commonKnots<lastObs[i]],lastObs[i])
+  else
   knotsList[[i]] = c(commonKnots[commonKnots<lastObs[i]],lastObs[i])
   nbasisVec[i]   =   length(knotsList[[i]])  + norder - 2
   bsbasisList[[i]]  = create.bspline.basis(range(knotsList[[i]]),nbasisVec[i],norder,knotsList[[i]])
@@ -41,7 +50,6 @@ for (i in 1:n) {
   # square of basis matrix (Phi). It is used frequent for optimization,
   # so we calculate in advance
   basismat2List[[i]]  = t(basismatList[[i]]) %*% basismatList[[i]]
-#  hatList[[i]] = t(solve(basismatList[[i]]%*%t(basismatList[[i]]))%*% basismatList[[i]])
   # values of the first derivative of basis functions at sampling points
   DbasismatList[[i]]  = eval.basis(tobsList[[i]],  bsbasisList[[i]], 1)
   # values of the second derivative of basis functions at sampling points
