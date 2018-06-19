@@ -1,7 +1,7 @@
 #! /usr/bin/env Rscript
 
 # Input arguments:
-#./dataAnalysis.R  "k=1" "nIterInOneBatch=2"   "nBatch=20" "nIterInOneBatch=3" "MAX=100" "MIN=-5" "fixedThred1 = -1" "fixedThred2 = 1" "knotsOption = 1" "distBetween2knots = 10"
+#./dataAnalysis.R  "k=1" "nIterInOneBatch=2"   "nBatch=20"  "MAX=100" "MIN=-5" "fixedThred1 = -1" "fixedThred2 = 1" "knotsOption = 1" "distBetween2knots = 10"
 
 rm(list=ls())
 library("fda")
