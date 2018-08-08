@@ -78,9 +78,23 @@ log_pi_gamma = function(y, k,  hiMat, current_gamma, sigma2_epsilon) {
   U_gamma <- bound[1,,]-hiMat
   L_gamma <- bound[2,,]-hiMat
   diff=pnorm(U_gamma[indxMat],sd=sqrt(sigma2_epsilon)) - pnorm(L_gamma[indxMat],sd=sqrt(sigma2_epsilon))
-  return(sum(log(diff[diff>0])))
+  return(ret+sum(log(diff[diff>0])))
 }
 
+
+logPI_gamma = function(y,  hiMat, current_gamma, sigma2_epsilon) {
+  n <- nrow(y)
+  mu_gamma <- 0
+  Sigma_gamma <- 10
+  ret <- sum(log(dnorm(current_gamma,mu_gamma,Sigma_gamma)))  # log prior
+  bound <- apply(y, c(1,2),ul,current_gamma)
+  n_gamma <- length(current_gamma)
+  indxMat <-  (!is.na(hiMat))
+  U_gamma <- bound[1,,]-hiMat
+  L_gamma <- bound[2,,]-hiMat
+  diff=pnorm(U_gamma[indxMat],sd=sqrt(sigma2_epsilon)) - pnorm(L_gamma[indxMat],sd=sqrt(sigma2_epsilon))
+  return(ret+sum(log(diff[diff>0])))
+}
 
 kappa <- function(gamma)
 {

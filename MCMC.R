@@ -2,6 +2,7 @@
 oneStepGs <-
   function(bvec, sigma2_b,  cList, lambda, lambda_mu, gammaVec, zMat, beta, sigma2_epsilon, a_lambda, b_lambda, sd_gamma_hat) {
     accept <- rep(0,length(gammaVec))
+    time <- proc.time()
     n <- nrow(X)
     a_b <- 1
     b_b <- 1/0.005
@@ -41,25 +42,44 @@ oneStepGs <-
     mu_beta <- sigma_beta %*% mu_beta
     beta <- mvrnorm(n = 1, mu_beta, sigma_beta)
     hiMat <-  rHiMat+matrix(rep(X%*%beta,m),nr=n,nc=m)
+#    print(proc.time()-time)
     time <- proc.time()
-    for (i in 1:length(gammaVec)) {
-      log_pi_gamma_i <- function(gamma_i, i) {
-        gammaVec1 <- gammaVec
-        gammaVec1[i] <- gamma_i
-        ret <- log_pi_gamma(y, i, hiMat, gammaVec1, sigma2_epsilon)
-      }
-      gamma_i_star <- rnorm(n = 1, gammaVec[i], sd_gamma_hat[i])
-      log_mh <- log_pi_gamma_i(gamma_i_star, i) - log_pi_gamma_i(gammaVec[i],i)
+    # for (i in 1:length(gammaVec)) {
+    #   log_pi_gamma_i <- function(gamma_i, i) {
+    #     gammaVec1 <- gammaVec
+    #     gammaVec1[i] <- gamma_i
+    #     ret <- log_pi_gamma(y, i, hiMat, gammaVec1, sigma2_epsilon)
+    #   }
+    #   gamma_i_star <- rnorm(n = 1, gammaVec[i], sd_gamma_hat[i])
+    #   time1 <- proc.time()
+    #   log_mh <- log_pi_gamma_i(gamma_i_star, i) - log_pi_gamma_i(gammaVec[i],i)
+    #   
+    #   cat(i,proc.time()-time1,"\n")
+    #   if (log_mh >= 0) {
+    #     accept[i] <- 1
+    #   }else{
+    #     accept[i] <- exp(log_mh)
+    #   }
+    #   if (exp(log_mh) > runif(1,0,1)) {
+    #     gammaVec[i] <- gamma_i_star
+    #   }
+    # }
+    # 
+      gamma_star <- rnorm(n = length(gammaVec), gammaVec, sd_gamma_hat)
+      time1 <- proc.time()
+      log_mh <- logPI_gamma(y, hiMat, gamma_star, sigma2_epsilon) - logPI_gamma(y, hiMat, gammaVec, sigma2_epsilon)
+       
+    #  cat(i,proc.time()-time1,"\n")
       if (log_mh >= 0) {
-        accept[i] <- 1
+        accept[1] <- 1
       }else{
-        accept[i] <- exp(log_mh)
+        accept[1] <- exp(log_mh)
       }
       if (exp(log_mh) > runif(1,0,1)) {
-        gammaVec[i] <- gamma_i_star
+        gammaVec <- gamma_star
       }
-    }
-    proc.time()-time
+    #cat("update gamma:")
+    #print(proc.time()-time)
     bound_gamma <- apply(y, c(1,2),ul,gammaVec)
     lowerBound <- bound_gamma[2,,]
     upperBound <- bound_gamma[1,,]
@@ -118,6 +138,7 @@ oneRunMCMC <-
     zMat <-  matrix(rnorm(n*m),n,m) # initZ(gammaVec)
     #beta <- c(4, 0.2,-0.08)+rep(0, ncol(X))
     beta <- rnorm(ncol(X)) 
+    beta[0] <- fixedThred1-MIN
     sigma2_epsilon=0.5
     sigma2_b <- 1
     bvec <-  rnorm(n,0, sqrt(sigma2_b))

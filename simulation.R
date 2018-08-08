@@ -1,5 +1,5 @@
 rm(list = ls())
-seed= 117
+seed= 1001
 set.seed(seed)  # 1 argument: the seed
 
 folder=paste("./Result-", seed, "/",sep="")
@@ -13,6 +13,10 @@ library(MASS)
 library(truncnorm)
 library(mvtnorm)
 library(MCMCpack)
+
+fixedThred1 = -10
+fixedThred2 = 1
+knotsOption = 1
 
 beta_true <- c(8, 0.2,-0.1)
 m=50
@@ -54,6 +58,11 @@ for(i in 1:3) scoreMat[,i] <- rnorm(n_simu,0,scoreSd[i])
 data_simu <- matrix(0,n_simu,m)
 for(i in 1:n_simu)
   data_simu[i,] <- scoreMat[i,1]*fpc1+scoreMat[i,2]*fpc2+scoreMat[i,3]*fpc3
+par(mfrow=c(1,2))
+matplot(t(data_simu),type = "l", xlab="Time")
+data_simu <-data_simu + matrix(rep(meanCurve,n_simu),n_simu,m,byrow=T)
+data_simu[data_simu>1]=1
+data_simu[data_simu<0]=0
 matplot(t(data_simu),type = "l", xlab="Time")
 
 MAX=10
@@ -70,11 +79,6 @@ inverseTTransform <- function(x)
   x*(MAX-MIN)+MIN
 }
 
-data_simu <-data_simu + matrix(rep(meanCurve,n_simu),n_simu,m,byrow=T)
-matplot(t(data_simu),type = "l", xlab="Time")
-data_simu[data_simu>1]=1
-data_simu[data_simu<0]=0
-matplot(t(data_simu),type = "l", xlab="Time")
 
 true_gamma <- c(-1, -2, -0.4, -0.5)
 kappa(true_gamma)
@@ -82,17 +86,17 @@ kappa(true_gamma)
 data_simu=inverseTTransform(data_simu)
 matplot(t(data_simu),type = "l", xlab="Time")
 
-mean_data_simu <- apply(data_simu,1,function(x) mean(x, na.rm=T))
-data_simu = data_simu - matrix(rep(mean_data_simu,m), n_simu,m,byrow = FALSE)
-matplot(t(data_simu),type = "l", xlab="Time")
+# mean_data_simu <- apply(data_simu,1,function(x) mean(x, na.rm=T))
+# data_simu = data_simu - matrix(rep(mean_data_simu,m), n_simu,m,byrow = FALSE)
+# matplot(t(data_simu),type = "l", xlab="Time")
 
-true_sigma2_epsilon = 0.8
+true_sigma2_epsilon = 1
 Vsqrt = sqrt(true_sigma2_epsilon)*diag(rep(1,m))
 R=diag(rep(1,m))
 sigma2_epsilon_Mat <- mvrnorm(n_simu, rep(0,m), Vsqrt%*%R%*%Vsqrt)
 
-true_sigma2_b <- 4
-true_bvec <- rnorm(n_simu,0, sqrt(true_sigma2_b))
+# true_sigma2_b <- 9
+# true_bvec <- rnorm(n_simu,0, sqrt(true_sigma2_b))
 
 x0 <- rep(1,n_simu)
 x1 <- rep(1,n_simu);
@@ -110,11 +114,13 @@ Z_sim <- matrix(NA,nr = n_simu,nc = m)
 health.mat <- matrix(NA,nr = n_simu,nc = m)
 #  norder = 4
 for (i in 1:n_simu) {
-  health.mat[i,]<-apply(rbind(data_simu[i,]+true_bvec[i], rep(MIN,m)),2,max)
+  #health.mat[i,]<-apply(rbind(data_simu[i,]+true_bvec[i], rep(MIN,m)),2,max)
+  #health.mat[i,]<-data_simu[i,]+true_bvec[i]
+  health.mat[i,]<-data_simu[i,]
   zerosInd=which(health.mat[i,]<=MIN)
   if(length(zerosInd)>0 && zerosInd[1]<m)
     health.mat[i,(zerosInd[1]+1):m]=MIN
-  Z_sim[i,] <-health.mat[i,]  + rep(X_sim[i,1:3]%*% beta_true[1:3],m) + sigma2_epsilon_Mat[i,]
+  Z_sim[i,] <- health.mat[i,]  + rep(X_sim[i,1:3]%*% beta_true[1:3],m) + sigma2_epsilon_Mat[i,]
 }
 par(mfrow=c(1,2))
 matplot(t(health.mat),type = "l", xlab="Time")  
@@ -178,7 +184,7 @@ lastDays[d == -1] = m
 source("spline_basis.R")
 
 nIterInOneBatch=2
-nBatch=1000
+nBatch=3000
 
 a_lambda = 1/100
 b_lambda = 100
@@ -192,8 +198,13 @@ mu_0 = rep(0,ncovariates)
 sigma_0 <- diag(rep(10,ncovariates))
 sd_gamma_hat = c(0.01, 0.01, 0.01, 0.01)
 
-MAX=20
-MIN=-20
+
+
+MAX=10
+MIN=-10
+if (!file.exists(folder)){
+  dir.create(folder)
+}
 runmcmcre<-oneRunMCMC(X, y, folder, nIterInOneBatch, nBatch,a_lambda, b_lambda, sd_gamma_hat)
 
 source("displayDataFuns.R")
@@ -222,7 +233,7 @@ for(i in 1:12)
 {
   temp = c(result_bvec[nstart:nend,i],true_bvec[i])
   hist(result_bvec[nstart:nend,i],main='b', xlim=range(temp))
-  abline(v=true_bvec[i], lwd=2, col=2)
+#  abline(v=true_bvec[i], lwd=2, col=2)
 }
 dev.off()
 
@@ -235,7 +246,7 @@ for(i in selSample)
 {
   temp = c(result_bvec[nstart:nend,i],true_bvec[i])
   hist(result_bvec[nstart:nend,i],main="", xlim=range(temp),col=4, xlab="", ylab="")
-  abline(v=true_bvec[i], lwd=2, col=2)
+ # abline(v=true_bvec[i], lwd=2, col=2)
 }
 dev.off()
 
@@ -245,7 +256,7 @@ plot(result_sigma2_b[nstart:nend, 1],ylab='',xlab='',type='l')
 dev.off()
 pdf(paste(filename_sigma2_b,"_hist.pdf",sep=""),width=9,height=9)
 hist(result_sigma2_b[nstart:nend, 1],col=4, xlab="", ylab="",main="")
-abline(v=true_sigma2_b, lwd=2, col=2)
+#abline(v=true_sigma2_b, lwd=2, col=2)
 dev.off()
 
 result_lambda <- read.table(file =  paste(filename_lambda,".txt",sep=""), header=FALSE);
@@ -266,7 +277,7 @@ dev.off()
 
 pdf(paste(filename_sigma2_epsilon,"_hist.pdf",sep=""),width=9,height=9)
 hist(result_sigma2_epsilon[nstart:nend,1], main="",xlab="",  ylab="",col=4)
-abline(v=0.8,lwd=2,col=2)
+abline(v=true_sigma2_epsilon,lwd=2,col=2)
 dev.off()
 
 result_gamma <- read.table(file = paste(filename_gamma,".txt",sep=""), header=FALSE)
@@ -343,20 +354,38 @@ for(i in 1:n)
   hi_resultList_upper[[i]]<-basismatList[[i]]%*% apply(c_i_list[[i]],2,function(x) quantile(x,0.975))
 }
 
+mean.mat = matrix(NA,n,m)
+hi_resultList_0=vector("list",n)
+for(i in 1:n)
+{
+  re.mat = matrix(NA,nend-burnin,m)
+  for(j in 1:(nend-burnin))
+  {
+    re.mat[j,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j,1:nbasisVec[i]])
+    re.mat[j,1:lastDays[i]] <- re.mat[j,1:lastDays[i]] - mean(re.mat[j,1:lastDays[i]]) +result_bvec[j+burnin,i]
+  }
+  re.mat[re.mat<MIN]=MIN
+  hi_resultList_0[[i]]=re.mat
+  mean.mat[i,]=colMeans(re.mat,na.rm=T)
+}
+
+
+newMax = quantile(mean.mat,0.99,na.rm=T)  
+
 for(i in 1:n)
 {
   pdf(paste(filename_c,"_",i, ".pdf", sep=""),width=10,height=2)
-  par(mfrow=c(1,2),oma=c(0.2,1.75,0.2,0.2),mar=c(3.5,3,0.2,0.5),cex.axis=1,las=1,
-      mgp=c(1.5,0.5,0),adj=0.5)
-  plot((hi_resultList[[i]]-MIN)/(MAX-MIN), type='l', ylab=paste("Health (", i,")",sep=""),xlab="Days",xlim=c(1,m), ylim=c(0,1))
-  hilower=(hi_resultList_low[[i]]-MIN)/(MAX-MIN)
-  hiupper=(hi_resultList_upper[[i]]-MIN)/(MAX-MIN)
+  par(mfrow=c(1,2),oma=c(0.2,1.75,0.2,0.2),mar=c(3.5,3,0.2,0.5),cex.axis=1,las=1, mgp=c(1.5,0.5,0),adj=0.5)
+  plot((hi_resultList[[i]]-MIN)/(newMax-MIN), type='l', ylab=paste("Health (", i,")",sep=""),xlab="Days",xlim=c(1,m), ylim=c(0,1))
+  hilower=(hi_resultList_low[[i]]-MIN)/(newMax-MIN)
+  hiupper=(hi_resultList_upper[[i]]-MIN)/(newMax-MIN)
   xseq = 1:length(hilower)
   polygon(c(rev(xseq), xseq), c(rev(hilower), hiupper), col = 'grey85', border = NA)
   lines(hilower, lwd=3, col=3, lty=3)
   lines(hiupper, lwd=3, col=3, lty=3)
-  lines((health.mat[i,]-MIN)/(MAX-MIN), lwd=2, col=2, lty=2)
-  lines((hi_resultList[[i]]-MIN)/(MAX-MIN),lwd=2,col=1)
+  #lines((health.mat[i,]-MIN)/(MAX-MIN), lwd=2, col=2, lty=2)
+  lines((health.mat[i,]-(-10))/(20), lwd=2, col=2, lty=2)
+  lines((hi_resultList[[i]]-MIN)/(newMax-MIN),lwd=2,col=1)
   showOnePatientLocation(y[i,],1)
   dev.off()
 }

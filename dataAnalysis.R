@@ -13,10 +13,20 @@ library(truncnorm)
 source("functions.R")
 source("MCMC.R")
 
-args <- commandArgs(TRUE)
-for(i in 1:length(args)){
-  eval(parse(text=args[i]))
-}
+# args <- commandArgs(TRUE)
+# for(i in 1:length(args)){
+#   eval(parse(text=args[i]))
+# }
+
+k=2 
+nIterInOneBatch=3 
+nBatch=2000  
+MAX=5 
+MIN=-5 
+fixedThred1 = -5 
+fixedThred2 = 1
+knotsOption = 1
+distBetween2knots = 10
 
 uniqueLevel = c(2, 10,  9,  4,  1,  8,  6,  7,  11,  3,  12,  13,  15,   5,  14,  16)
 nObsEachLevel = matrix(c(2889, 1592, 4410, 4757, 2073, 4349, 2900, 3631, 3110, 2222, 1200, 1762, 186, 1921, 970,  4),1)

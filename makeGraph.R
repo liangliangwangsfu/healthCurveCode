@@ -19,7 +19,6 @@ ncols_lambda <- ncol(result_lambda)
 nend <- nrows_lambda
 nstart <- round(nend*0.3)
 burnin <- nstart
-#nstart <- nend-2000
 result_sigma2_epsilon <- read.table(file =  paste(filename_sigma2_epsilon,".txt",sep=""), header=FALSE);
 result_gamma <- read.table(file = paste(filename_gamma,".txt",sep=""), header=FALSE)
 
@@ -49,6 +48,7 @@ for(i in 1:n)
   {
     re.mat[j,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])
     re.mat[j,1:lastDays[i]] <- re.mat[j,1:lastDays[i]] - mean(re.mat[j,1:lastDays[i]]) +result_bvec[j+burnin,i]
+   #  re.mat[j,1:lastDays[i]] <- re.mat[j,1:lastDays[i]]  +result_bvec[j+burnin,i]
   }
   re.mat[re.mat<MIN]=MIN
   hi_resultList_0[[i]]=re.mat
@@ -61,12 +61,18 @@ for(j in 1:(nend-burnin))
   re.mat = matrix(NA,n,m)
   for(i in 1:n)
   {
+    #cbind(basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])+result_bvec[j+burnin,i], basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])- mean(re.mat[i,1:lastDays[i]])+result_bvec[j+burnin,i])
     re.mat[i,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])
-    re.mat[i,1:lastDays[i]] <- re.mat[i,1:lastDays[i]] - mean(re.mat[i,1:lastDays[i]]) +result_bvec[j+burnin,i]
+    cat(mean(re.mat[i,1:lastDays[i]]), result_bvec[j+burnin,i], "\n")
+    #re.mat[i,1:lastDays[i]] <- re.mat[i,1:lastDays[i]] - mean(re.mat[i,1:lastDays[i]]) +result_bvec[j+burnin,i]
+    re.mat[i,1:lastDays[i]] <- re.mat[i,1:lastDays[i]] +result_bvec[j+burnin,i]
   }
   re.mat[re.mat<MIN]=MIN
   mean.mat.2[j,]=colMeans(re.mat,na.rm=T)
 }
+
+
+mean(unlist(result_bvec[burnin:nend,]))
 
 #########################################################################################
 newMax = quantile(mean.mat,0.99,na.rm=T)  
