@@ -1,4 +1,4 @@
-allXy.RData         --- Data
+pt_vars_stroke_location.RData         --- Data
 realDataAnalysis.R  --- code for the real data analysis in Section 5. 	
 simulation.R        --- code of the simulation study in Section 6. 		
 MCMC.R	            --- main code of the MCMC algorithm implementation. 	
