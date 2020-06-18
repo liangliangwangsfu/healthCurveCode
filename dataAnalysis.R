@@ -18,9 +18,10 @@ source("MCMC.R")
 #   eval(parse(text=args[i]))
 # }
 
-k=2 
+set.seed(300)
+k=1 
 nIterInOneBatch=3 
-nBatch=2000  
+nBatch=10
 MAX=5 
 MIN=-5 
 fixedThred1 = -5 

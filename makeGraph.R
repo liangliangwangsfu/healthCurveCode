@@ -75,9 +75,9 @@ for(j in 1:(nend-burnin))
 mean(unlist(result_bvec[burnin:nend,]))
 
 #########################################################################################
-newMax = quantile(mean.mat,0.99,na.rm=T)  
+newMax = quantile(mean.mat,0.995,na.rm=T)  
 #newMax = quantile(rowMeans(mean.mat),0.99,na.rm=T)
-#newMax = max(rowMeans(mean.mat), na.rm=T)
+#newMax = max((mean.mat), na.rm=T)
 himean  <- (colMeans(mean.mat.2,na.rm = T)-MIN)/(newMax-MIN)
 mean(himean)
 hilower <- (apply(mean.mat.2,2,function(x)  quantile(x, 0.025, na.rm = T))-MIN)/(newMax-MIN)
@@ -115,9 +115,10 @@ dev.off()
 normHMat[normHMat>1]=1
 normHMat[normHMat<0]=0
 pdf(paste(folder, "selectedCurves.pdf",sep=""), width=6,height=6)
-nSel <- 10
+nSel <- 4
 #oneSample <- sample(1:nrow(mean.mat),nSel)
-oneSample <- 20+(1:nSel)
+#oneSample <- 20+(1:nSel)
+oneSample <- c(21, 22, 33, 98)
 colvec <- 1:nSel#c(1,4,2,6)
 ltyvec <- 1:nSel#c(2,3,1,4)
 par(mar = c(2, 2, 0.5, 0.5), mfrow = c(2,1))
@@ -145,7 +146,7 @@ for (j in 2:length(oneSample))
 {
   oneCurve <-  (colMeans(hi_resultList_0[[oneSample[j]]])-MIN)/(newMax-MIN)
   if(lastDays[oneSample[j]]!=m) 
-    oneCurve <- c(oneCurve, rep(0,m-lastDays[oneSample[j]]))
+    oneCurve <- c(oneCurve[1:lastDays[oneSample[j]]], rep(0,m-lastDays[oneSample[j]]))
   lines(
     oneCurve, type = 'l', col = colvec[j], lwd = 2,lty = ltyvec[j]
   )
@@ -287,18 +288,36 @@ quantile.thre = 0.05
 dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[1,])))
 sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
 matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=1, ylim=c(0,1), lty=1)
+lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
+
 
 dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[2,])))
 sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
 matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=2, ylim=c(0,1), lty=1)
+lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
+
+
 
 dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[3,])))
 sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
 matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=3, ylim=c(0,1), lty=1)
+lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
+
 
 dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[4,])))
 sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
 matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=4, ylim=c(0,1), lty=1)
+lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
+lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
+
+
 dev.off()
 
 ##########################################################################################
