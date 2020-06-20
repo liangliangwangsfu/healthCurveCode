@@ -35,14 +35,18 @@ hi_resultList_upper=vector("list",n)
 for(i in 1:n)
 {
   hi_resultList[[i]]<-basismatList[[i]]%*% colMeans(c_i_list[[i]][burnin:nend,1:nbasisVec[i]])
-  hi_resultList_lower[[i]] <- basismatList[[i]]%*%apply(c_i_list[[i]],2,function(x)quantile(x,0.025)) 
-  hi_resultList_upper[[i]] <- basismatList[[i]]%*%apply(c_i_list[[i]],2,function(x)quantile(x,0.975)) 
+  hi_resultList_lower[[i]] <- basismatList[[i]]%*%apply(c_i_list[[i]][burnin:nend,],2,function(x)quantile(x,0.025)) 
+  hi_resultList_upper[[i]] <- basismatList[[i]]%*%apply(c_i_list[[i]][burnin:nend,],2,function(x)quantile(x,0.975)) 
 }
 
 mean.mat = matrix(NA,n,m)
+#lower.mat = matrix(NA,n,m)
+#upper.mat = matrix(NA,n,m)
+
 hi_resultList_0=vector("list",n)
 for(i in 1:n)
 {
+  print(i)
   re.mat = matrix(NA,nend-burnin,m)
   for(j in 1:(nend-burnin))
   {
@@ -53,6 +57,8 @@ for(i in 1:n)
   re.mat[re.mat<MIN]=MIN
   hi_resultList_0[[i]]=re.mat
   mean.mat[i,]=colMeans(re.mat,na.rm=T)
+  #upper.mat[i,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.975, na.rm=T)))
+  #lower.mat[i,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.025, na.rm=T)))
 }
 
 mean.mat.2 = matrix(NA,nend-burnin,m)
@@ -63,7 +69,7 @@ for(j in 1:(nend-burnin))
   {
     #cbind(basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])+result_bvec[j+burnin,i], basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])- mean(re.mat[i,1:lastDays[i]])+result_bvec[j+burnin,i])
     re.mat[i,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])
-    cat(mean(re.mat[i,1:lastDays[i]]), result_bvec[j+burnin,i], "\n")
+    #cat(mean(re.mat[i,1:lastDays[i]]), result_bvec[j+burnin,i], "\n")
     #re.mat[i,1:lastDays[i]] <- re.mat[i,1:lastDays[i]] - mean(re.mat[i,1:lastDays[i]]) +result_bvec[j+burnin,i]
     re.mat[i,1:lastDays[i]] <- re.mat[i,1:lastDays[i]] +result_bvec[j+burnin,i]
   }
@@ -77,7 +83,8 @@ mean(unlist(result_bvec[burnin:nend,]))
 #########################################################################################
 newMax = quantile(mean.mat,0.995,na.rm=T)  
 #newMax = quantile(rowMeans(mean.mat),0.99,na.rm=T)
-#newMax = max((mean.mat), na.rm=T)
+#newMax = max(rowMeans(mean.mat), na.rm=T)
+#newMax = max(mean.mat, na.rm=T)
 himean  <- (colMeans(mean.mat.2,na.rm = T)-MIN)/(newMax-MIN)
 mean(himean)
 hilower <- (apply(mean.mat.2,2,function(x)  quantile(x, 0.025, na.rm = T))-MIN)/(newMax-MIN)
@@ -97,6 +104,7 @@ normHMat = scaledhMat
 normHMat[normHMat<0]=0
 normHMat[is.na(normHMat)]=0 
 normHMat[normHMat>1]=1
+
 
 ########################################################################################
 
@@ -282,40 +290,163 @@ sum(re==2)/n  #[1] 0.2150821
 sum(re==3)/n  #[1] 0.5041557
 sum(re==4)/n  #[1] 0.2248125
 
-pdf(paste(folder,"clusters.pdf",sep=""), width=8,height=8)
-par(mar = c(4.5, 4.5, 0.5, 0.5), mfrow = c(2,2))
+# compute credible interval
+# cluster 1
 quantile.thre = 0.05
-dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[1,])))
+dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[4,])))
 sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
-matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=1, ylim=c(0,1), lty=1)
-lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
+mean.mat_1 = matrix(NA,nend-burnin,m)
+
+for(j in 1:(nend-burnin))
+{
+  print(j)
+  re.mat = matrix(NA,length(sel.ind),m)
+  for(index in 1:length(sel.ind))
+  {
+    i = sel.ind[index]
+    re.mat[index,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])
+    re.mat[index,1:lastDays[i]] <- re.mat[index,1:lastDays[i]] - mean(re.mat[index,1:lastDays[i]]) +result_bvec[j+burnin,i]
+    #  re.mat[j,1:lastDays[i]] <- re.mat[j,1:lastDays[i]]  +result_bvec[j+burnin,i]
+  }
+  re.mat[re.mat<MIN]=MIN
+  #hi_resultList_0[[i]]=re.mat
+  mean.mat_1[j,]=colMeans(re.mat,na.rm=T)
+ # upper.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.975, na.rm=T)))
+  #lower.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.025, na.rm=T)))
+}
+
+normHMat1 = (mean.mat_1-MIN)/(newMax-MIN)
+normHMat1[normHMat1<0]=0
+normHMat1[is.na(normHMat1)]=0 
+normHMat1[normHMat1>1]=1
 
 
-dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[2,])))
-sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
-matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=2, ylim=c(0,1), lty=1)
-lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
 
-
-
+#cluster 2
 dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[3,])))
 sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
-matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=3, ylim=c(0,1), lty=1)
-lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
+mean.mat_2 = matrix(NA,nend-burnin,m)
+
+for(j in 1:(nend-burnin))
+{
+  print(j)
+  re.mat = matrix(NA,length(sel.ind),m)
+  for(index in 1:length(sel.ind))
+  {
+    i = sel.ind[index]
+    re.mat[index,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])
+    re.mat[index,1:lastDays[i]] <- re.mat[index,1:lastDays[i]] - mean(re.mat[index,1:lastDays[i]]) +result_bvec[j+burnin,i]
+    #  re.mat[j,1:lastDays[i]] <- re.mat[j,1:lastDays[i]]  +result_bvec[j+burnin,i]
+  }
+  re.mat[re.mat<MIN]=MIN
+  #hi_resultList_0[[i]]=re.mat
+  mean.mat_2[j,]=colMeans(re.mat,na.rm=T)
+  # upper.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.975, na.rm=T)))
+  #lower.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.025, na.rm=T)))
+}
+
+normHMat2 = (mean.mat_2-MIN)/(newMax-MIN)
+normHMat2[normHMat2<0]=0
+normHMat2[is.na(normHMat2)]=0 
+normHMat2[normHMat2>1]=1
+
+
+#cluster 3
+dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[1,])))
+sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
+mean.mat_3 = matrix(NA,nend-burnin,m)
+
+for(j in 1:(nend-burnin))
+{
+  print(j)
+  re.mat = matrix(NA,length(sel.ind),m)
+  for(index in 1:length(sel.ind))
+  {
+    i = sel.ind[index]
+    re.mat[index,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])
+    re.mat[index,1:lastDays[i]] <- re.mat[index,1:lastDays[i]] - mean(re.mat[index,1:lastDays[i]]) +result_bvec[j+burnin,i]
+    #  re.mat[j,1:lastDays[i]] <- re.mat[j,1:lastDays[i]]  +result_bvec[j+burnin,i]
+  }
+  re.mat[re.mat<MIN]=MIN
+  #hi_resultList_0[[i]]=re.mat
+  mean.mat_3[j,]=colMeans(re.mat,na.rm=T)
+  # upper.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.975, na.rm=T)))
+  #lower.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.025, na.rm=T)))
+}
+
+normHMat3 = (mean.mat_3-MIN)/(newMax-MIN)
+normHMat3[normHMat3<0]=0
+normHMat3[is.na(normHMat3)]=0 
+normHMat3[normHMat3>1]=1
+
+
+#cluster 4
+dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[2,])))
+sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
+mean.mat_4 = matrix(NA,nend-burnin,m)
+
+for(j in 1:(nend-burnin))
+{
+  print(j)
+  re.mat = matrix(NA,length(sel.ind),m)
+  for(index in 1:length(sel.ind))
+  {
+    i = sel.ind[index]
+    re.mat[index,1:lastDays[i]] <- basismatList[[i]]%*% t(c_i_list[[i]][j+burnin,1:nbasisVec[i]])
+    re.mat[index,1:lastDays[i]] <- re.mat[index,1:lastDays[i]] - mean(re.mat[index,1:lastDays[i]]) +result_bvec[j+burnin,i]
+    #  re.mat[j,1:lastDays[i]] <- re.mat[j,1:lastDays[i]]  +result_bvec[j+burnin,i]
+  }
+  re.mat[re.mat<MIN]=MIN
+  #hi_resultList_0[[i]]=re.mat
+  mean.mat_4[j,]=colMeans(re.mat,na.rm=T)
+  # upper.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.975, na.rm=T)))
+  #lower.mat_1[j,]=apply(re.mat,2,function(x)(quantile(x, probs = 0.025, na.rm=T)))
+}
+
+normHMat4 = (mean.mat_4-MIN)/(newMax-MIN)
+normHMat4[normHMat4<0]=0
+normHMat4[is.na(normHMat4)]=0 
+normHMat4[normHMat4>1]=1
+
+
+pdf(paste(folder,"clusters.pdf",sep=""), width=8,height=8)
+par(mar = c(4.5, 4.5, 0.5, 0.5), mfrow = c(2,2)) 
+quantile.thre = 0.05
 
 
 dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[4,])))
 sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
+matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=1, ylim=c(0,1), lty=1)
+
+lines(apply(normHMat1, 2, mean), lty = 2, col = 6, lwd = 2)
+lines(apply(normHMat1, 2, function(x)(quantile(x, probs = 0.975, na.rm=T))), lty = 3, col = 6, lwd = 2)
+lines(apply(normHMat1, 2, function(x)(quantile(x, probs = 0.025, na.rm=T))), lty = 3, col = 6, lwd = 2)
+
+dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[3,])))
+sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
+matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=2, ylim=c(0,1), lty=1)
+
+lines(apply(normHMat2, 2, mean), lty = 2, col = 6, lwd = 2)
+lines(apply(normHMat2, 2, function(x)(quantile(x, probs = 0.975, na.rm=T))), lty = 3, col = 6, lwd = 2)
+lines(apply(normHMat2, 2, function(x)(quantile(x, probs = 0.025, na.rm=T))), lty = 3, col = 6, lwd = 2)
+
+
+dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[1,])))
+sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
+matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=3, ylim=c(0,1), lty=1)
+
+lines(apply(normHMat3, 2, mean), lty = 2, col = 6, lwd = 2)
+lines(apply(normHMat3, 2, function(x)(quantile(x, probs = 0.975, na.rm=T))), lty = 3, col = 6, lwd = 2)
+lines(apply(normHMat3, 2, function(x)(quantile(x, probs = 0.025, na.rm=T))), lty = 3, col = 6, lwd = 2)
+
+
+dist1.vec = apply(PCAobjects1$scores[,1:2], 1, function(x) dist(rbind(x,re.kmeans$centers[2,])))
+sel.ind = which(dist1.vec<quantile(dist1.vec, quantile.thre))
 matplot(t(normHMat[sel.ind,]),type = "l", xlab="Time (Days)", col=4, ylim=c(0,1), lty=1)
-lines(apply(normHMat[sel.ind,], 2, mean), lty = 4, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.975))), lty = 2, col = 6, lwd = 3)
-lines(apply(normHMat[sel.ind,], 2, function(x)(quantile(x, probs = 0.025))), lty = 2, col = 6, lwd = 3)
+
+lines(apply(normHMat4, 2, mean), lty = 2, col = 6, lwd = 2)
+lines(apply(normHMat4, 2, function(x)(quantile(x, probs = 0.975, na.rm=T))), lty = 3, col = 6, lwd = 2)
+lines(apply(normHMat4, 2, function(x)(quantile(x, probs = 0.025, na.rm=T))), lty = 3, col = 6, lwd = 2)
 
 
 dev.off()
